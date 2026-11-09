@@ -67,3 +67,24 @@ def simulate(payload):
     result.sort(key=lambda r:r['production'],reverse=True)
     return emit({'demand':float(f.sum()),'production':float(x.sum()),'imports':float(m.sum()),
                  'valueAdded':float(v.sum()),'multiplier':float(x.sum()/f.sum()),'rows':result})
+def linkage():
+    if not valid: raise ValueError('검증된 데이터가 없습니다.')
+    col = L.sum(axis=0)      # 열합계: 산업 j의 수요 1단위가 전 산업에 유발하는 생산
+    row = L.sum(axis=1)      # 행합계: 전 산업 수요 1단위씩에 대해 산업 i가 받는 생산
+    infl = col / col.mean()  # 영향력계수 (후방연쇄효과)
+    sens = row / row.mean()  # 감응도계수 (전방연쇄효과)
+    vcol = V.sum(axis=0)     # 부가가치유발계수(열합계)
+    mcol = M.sum(axis=0)     # 수입유발계수(열합계)
+
+    def kind(i, s):
+        if i > 1 and s > 1: return '전·후방 연쇄 모두 큼'
+        if i > 1: return '후방 연쇄 큼(수요 견인형)'
+        if s > 1: return '전방 연쇄 큼(공급 기반형)'
+        return '연쇄 작음'
+
+    rows = [{'code': c, 'name': n,
+             'influence': float(i), 'sensitivity': float(s),
+             'productionMult': float(a), 'valueAddedMult': float(b), 'importMult': float(d),
+             'type': kind(i, s)}
+            for c, n, i, s, a, b, d in zip(codes, names, infl, sens, col, vcol, mcol)]
+    return emit({'rows': rows})
