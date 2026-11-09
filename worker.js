@@ -18,10 +18,12 @@ async function handle({id,type,payload}) {
       await py.runPythonAsync('raw_bytes = raw_input.to_py()');
       result=await py.runPythonAsync('initialize(raw_bytes)');
       await py.runPythonAsync('del raw_input, raw_bytes');
-    } else if(type==='explore') {
+     } else if(type==='explore') {
       py.globals.set('sheet_input',payload.sheet);
       py.globals.set('row_input',payload.row||'');
       result=py.runPython('explore(sheet_input, row_input)');
+    } else if(type==='linkage') {
+      result=py.runPython('linkage()');
     } else {
       py.globals.set('scenario_input',JSON.stringify(payload));
       result=py.runPython('simulate(scenario_input)');
